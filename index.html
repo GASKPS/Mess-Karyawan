@@ -65,6 +65,7 @@ body.dark tbody tr:nth-child(even) { background: rgba(255,255,255,0.05); }
 .btn-outline-primary:hover { background: var(--primary); color:#fff; border-color: var(--primary); }
 td i { margin-right:4px; }
 .footer { text-align:center; font-size:12px; color:var(--text-muted); margin-top:20px; }
+#last-update { text-align:center; font-size:12px; color:var(--text-muted); margin-bottom:10px; }
 </style>
 </head>
 <body>
@@ -79,6 +80,9 @@ td i { margin-right:4px; }
   <h2>Mess Karyawan</h2>
   <div class="subtitle">Sistem Informasi Penghuni Mess</div>
   <hr>
+
+  <!-- Tanggal update database -->
+  <div id="last-update">Update database terakhir: 23 Januari 2026 22:00 WIT</div>
 
   <div id="screenshot-header">
     <img src="logo.png" alt="Logo">
@@ -207,12 +211,11 @@ async function cariNikNama(){
   render(hasilNik,data);
 }
 
-// Live search saat ketik
 cariNik.addEventListener("input", ()=>cariNikNama());
 
 /* SEARCH BLOK/KAMAR/LOKASI */
 async function cariBlockKamar(){
-  let query = supabaseClient.from("Karyawan").select("*").limit(50);
+  let query = supabaseClient.from("Karyawan").select("*").limit(10);
   if(cariLokasi.value) query = query.eq("lokasi_hunian", cariLokasi.value.trim());
   if(cariBlock.value) query = query.eq("block", cariBlock.value.trim());
   if(cariKamar.value) query = query.eq("no_kamar", cariKamar.value.trim());
@@ -228,7 +231,6 @@ function screenshotTabel(tab){
   header.style.display="block";
   document.getElementById("screenshot-time").innerText = new Date().toLocaleString();
 
-  // expand table sementara agar semua baris terlihat
   const tableContainer = area.querySelector(".table-container");
   const originalHeight = tableContainer.style.maxHeight;
   tableContainer.style.maxHeight = "none";
@@ -239,7 +241,6 @@ function screenshotTabel(tab){
     a.download="mess_karyawan.png";
     a.click();
 
-    // kembalikan scroll
     tableContainer.style.maxHeight = originalHeight;
     header.style.display="none";
   });
