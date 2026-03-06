@@ -16,6 +16,30 @@
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
 <style>
+/* ================== MINI SPLASH SCREEN ================== */
+#splash-screen{
+  position:fixed;
+  inset:0;
+  background: rgba(255,255,255,0.8);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index:9999;
+  flex-direction:column;
+  pointer-events:none;
+  transition: opacity 0.5s ease;
+}
+#splash-screen img{
+  height:80px;
+  object-fit:contain;
+  margin-bottom:10px;
+}
+#splash-screen span{
+  font-size:14px;
+  color:#555;
+}
+
+/* ================== VARIABLES & GENERAL ================== */
 :root{
   --bg: #f1f3f6;
   --card: #ffffff;
@@ -38,10 +62,30 @@ body.dark{
   --badge-primary: #3b82f6;
   --badge-secondary: #6b7280;
 }
-body { background: var(--bg); color: var(--text); min-height:100vh; padding:40px 15px; display:flex; justify-content:center; align-items:flex-start; font-family:"Segoe UI",sans-serif; }
-.card { max-width:950px; width:100%; background:var(--card); border-radius:16px; padding:25px; box-shadow:0 10px 30px rgba(0,0,0,.15); position:relative; transition:background 0.3s; }
+body { 
+  background: var(--bg); 
+  color: var(--text); 
+  min-height:100vh; 
+  padding:40px 15px; 
+  display:flex; 
+  justify-content:center; 
+  align-items:flex-start; 
+  font-family:"Segoe UI",sans-serif; 
+  transition: background 0.3s, color 0.3s;
+}
+.card { 
+  max-width:950px; 
+  width:100%; 
+  background:var(--card); 
+  border-radius:16px; 
+  padding:25px; 
+  box-shadow:0 10px 30px rgba(0,0,0,.15); 
+  position:relative; 
+  transition:background 0.3s; 
+  text-align:center; 
+}
 h2 { text-align:center; color:var(--primary); margin-bottom:4px; }
-.subtitle { text-align:center; font-size:14px; color:var(--text-muted); }
+.subtitle { text-align:center; font-size:14px; color:var(--text-muted); margin-bottom:15px; }
 .dark-toggle { text-align:right; margin-bottom:10px; }
 .form-control, .btn { height:45px; border-radius:10px; transition: all 0.2s ease; }
 body.dark .form-control::placeholder { color: var(--text-muted); opacity:1; }
@@ -49,7 +93,7 @@ body.dark .form-control::placeholder { color: var(--text-muted); opacity:1; }
 .eclipse .sun { position:absolute; inset:0; border-radius:50%; background:#facc15; box-shadow:0 0 6px rgba(250,204,21,.8); transition:transform 0.4s ease; }
 .eclipse .moon { position:absolute; inset:0; border-radius:50%; background:#0f172a; transform:translateX(-26px); transition:transform 0.4s ease; }
 body.dark .eclipse .moon { transform:translateX(0); box-shadow:0 0 6px #22d3ee, 0 0 14px rgba(34,211,238,.8); }
-.table-container{ max-height:380px; overflow:auto; border-radius:10px; background:var(--card); box-shadow:0 4px 12px rgba(0,0,0,.1); }
+.table-container{ max-height:380px; overflow:auto; border-radius:10px; background:var(--card); box-shadow:0 4px 12px rgba(0,0,0,.1); margin-bottom:10px; }
 table { width:100%; border-collapse:collapse; color:var(--text); }
 th { position:sticky; top:0; background:var(--primary); color:#fff; }
 th, td { border:1px solid var(--border); padding:8px; font-size:14px; transition:all 0.2s ease; }
@@ -58,8 +102,15 @@ tbody tr:nth-child(even) { background: rgba(0,0,0,0.03); }
 body.dark tbody tr:nth-child(even) { background: rgba(255,255,255,0.05); }
 .badge.bg-primary { background-color: var(--badge-primary); }
 .badge.bg-secondary { background-color: var(--badge-secondary); }
-#screenshot-header { display:none; text-align:center; margin-bottom:10px; }
-#screenshot-header img { height:50px; margin-bottom:6px; }
+
+/* Logo kecil web */
+#logo-web { 
+  height: 80px; 
+  max-width: 100%; 
+  margin-bottom:10px; 
+  object-fit: contain; 
+}
+
 .btn-primary { background:linear-gradient(135deg,#4dabf7,#1e40af); border:none; }
 .btn-outline-primary { transition:all 0.3s; }
 .btn-outline-primary:hover { background: var(--primary); color:#fff; border-color: var(--primary); }
@@ -70,6 +121,12 @@ td i { margin-right:4px; }
 </head>
 <body>
 
+<!-- MINI SPLASH SCREEN -->
+<div id="splash-screen">
+  <img src="logo-perusahaan.png" alt="Logo Perusahaan">
+  <span>Loading...</span>
+</div>
+
 <div class="card">
   <div class="dark-toggle">
     <button class="btn btn-outline-primary btn-sm" onclick="toggleDark()" title="Dark / Light Mode">
@@ -77,18 +134,13 @@ td i { margin-right:4px; }
     </button>
   </div>
 
+  <img id="logo-web" src="logo-perusahaan.png" alt="Logo Perusahaan">
+
   <h2>Mess Karyawan</h2>
   <div class="subtitle">Sistem Informasi Penghuni Mess</div>
   <hr>
 
-  <!-- Tanggal update database -->
   <div id="last-update">Update database terakhir: 4 Maret 2026 17:55 WIT</div>
-
-  <div id="screenshot-header">
-    <img src="logo.png" alt="Logo">
-    <h5 class="fw-semibold mb-0">Data Mess Karyawan</h5>
-    <small id="screenshot-time"></small>
-  </div>
 
   <ul class="nav nav-tabs justify-content-center mb-3">
     <li class="nav-item">
@@ -163,6 +215,15 @@ td i { margin-right:4px; }
 </div>
 
 <script>
+/* SPLASH SCREEN HILANG SETELAH LOAD */
+window.addEventListener('load', ()=>{
+  setTimeout(()=>{
+    const splash = document.getElementById('splash-screen');
+    splash.style.opacity = '0';
+    setTimeout(()=> splash.style.display='none',500);
+  },1000); 
+});
+
 /* DARK MODE */
 if(localStorage.getItem("dark")==="on") document.body.classList.add("dark");
 function toggleDark(){ 
@@ -224,26 +285,28 @@ async function cariBlockKamar(){
   render(hasilBlock,data);
 }
 
-/* SCREENSHOT SEMUA DATA TABLE */
+/* SCREENSHOT HANYA TABLE UKURAN KECIL, TANPA LOGO */
 function screenshotTabel(tab){
   const area = document.getElementById("screenshot-area-"+tab);
-  const header = document.getElementById("screenshot-header");
-  header.style.display="block";
-  document.getElementById("screenshot-time").innerText = new Date().toLocaleString();
-
   const tableContainer = area.querySelector(".table-container");
-  const originalHeight = tableContainer.style.maxHeight;
+
+  const originalMaxHeight = tableContainer.style.maxHeight;
+  const originalOverflow = tableContainer.style.overflow;
+
   tableContainer.style.maxHeight = "none";
+  tableContainer.style.overflow = "visible";
 
-  html2canvas(area,{scrollY:-window.scrollY,scrollX:-window.scrollX}).then(canvas=>{
-    const a=document.createElement("a");
-    a.href=canvas.toDataURL("image/png");
-    a.download="mess_karyawan.png";
-    a.click();
+  setTimeout(()=>{
+    html2canvas(area, {scale:0.8, useCORS:true, backgroundColor:null}).then(canvas=>{
+      const link = document.createElement("a");
+      link.download = `mess_karyawan_${new Date().toISOString().slice(0,10)}.png`;
+      link.href = canvas.toDataURL("image/png");
+      link.click();
 
-    tableContainer.style.maxHeight = originalHeight;
-    header.style.display="none";
-  });
+      tableContainer.style.maxHeight = originalMaxHeight;
+      tableContainer.style.overflow = originalOverflow;
+    });
+  },200);
 }
 </script>
 
