@@ -66,7 +66,7 @@ body {
   background: var(--bg); 
   color: var(--text); 
   min-height:100vh; 
-  padding: 15px 10px; /* Diperkecil untuk HP */
+  padding: 15px 10px;
   display:flex; 
   justify-content:center; 
   align-items:flex-start; 
@@ -79,14 +79,13 @@ body {
   width:100%; 
   background:var(--card); 
   border-radius:24px; 
-  padding: 20px; /* Padding dinamis */
+  padding: 20px;
   box-shadow:0 10px 40px rgba(0,0,0,.08); 
   position:relative; 
   border: 1px solid var(--border);
   text-align:center; 
 }
 
-/* Responsif Padding untuk Desktop */
 @media (min-width: 768px) {
     body { padding: 40px 15px; }
     .card { padding: 35px; }
@@ -101,7 +100,7 @@ h2 { color:var(--primary); margin-bottom:4px; font-weight: 800; letter-spacing: 
 .eclipse .moon { position:absolute; inset:0; border-radius:50%; background:#1e1e1e; transform:translateX(-26px); transition:transform 0.4s ease; }
 body.dark .eclipse .moon { transform:translateX(0); box-shadow:0 0 6px #60a5fa; }
 
-.form-control { border-radius:12px; transition: all 0.2s ease; background-color: var(--input-bg); color: var(--text); border: 1px solid var(--border); padding: 10px 14px; font-size: 16px; /* Mencegah auto-zoom iOS */ }
+.form-control { border-radius:12px; transition: all 0.2s ease; background-color: var(--input-bg); color: var(--text); border: 1px solid var(--border); padding: 10px 14px; font-size: 16px; }
 .form-control:focus { background-color: var(--input-bg); color: var(--text); border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
 
 .btn-elegant {
@@ -118,37 +117,29 @@ body.dark .eclipse .moon { transform:translateX(0); box-shadow:0 0 6px #60a5fa; 
     gap: 8px;
     transition: all 0.3s ease;
     box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
-    width: 100%; /* Full width di HP */
+    width: 100%;
 }
 
 @media (min-width: 768px) {
     .btn-elegant { width: auto; }
 }
 
-.btn-elegant:hover {
-    filter: brightness(1.1);
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(30, 58, 138, 0.2);
-    color: white;
-}
-
-/* Optimasi Tabel untuk Mobile */
 .table-container { 
     max-height: 400px; 
-    overflow-x: auto; /* Scroll horizontal jika kolom banyak */
+    overflow-x: auto; 
     overflow-y: auto; 
     border-radius: 16px; 
     background: var(--card); 
     border: 1px solid var(--border); 
     margin-bottom: 10px;
-    -webkit-overflow-scrolling: touch; /* Scroll halus di iOS */
+    -webkit-overflow-scrolling: touch;
 }
 
-table { width: 100%; min-width: 600px; /* Mencegah kolom berdempetan */ border-collapse: collapse; color: var(--text); }
+table { width: 100%; min-width: 700px; border-collapse: collapse; color: var(--text); }
 th { position: sticky; top: 0; background: var(--primary); color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 8px; z-index: 10; border: none; }
 body.dark th { color: #111; font-weight: 700; background: var(--primary); }
 
-td { padding: 12px 8px; font-size: 13px; border-bottom: 1px solid var(--border); white-space: nowrap; /* Teks tidak bungkus agar rapi */ }
+td { padding: 12px 8px; font-size: 13px; border-bottom: 1px solid var(--border); white-space: nowrap; }
 tbody tr:hover { background: var(--hover); }
 
 #logo-web { height: 60px; margin-bottom: 15px; object-fit: contain; }
@@ -160,8 +151,6 @@ tbody tr:hover { background: var(--hover); }
 .badge.bg-primary { background-color: var(--badge-primary) !important; }
 .badge.bg-secondary { background-color: var(--badge-secondary) !important; }
 
-/* Styling Tab agar scannable di HP */
-.nav-pills { gap: 5px; }
 .nav-pills .nav-link { 
     color: var(--text-muted); 
     font-weight: 600; 
@@ -204,16 +193,16 @@ tbody tr:hover { background: var(--hover); }
 
   <div class="tab-content">
     <div class="tab-pane fade show active" id="tab1">
-      <div class="mb-3 position-relative">
+      <div class="mb-3">
         <input id="cariNik" class="form-control" placeholder="Cari NIK atau Nama...">
       </div>
       <div class="d-flex justify-content-between align-items-center mb-2">
         <span class="text-muted small fw-medium">Hasil</span>
-        <button class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" onclick="screenshotTabel('tab1')"><i class="bi bi-download me-1"></i> Screenshot</button>
+        <button class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" onclick="screenshotTabel('tab1')"><i class="bi bi-camera me-1"></i> Screenshot</button>
       </div>
       <div id="screenshot-area-tab1">
         <div class="table-container">
-          <table>
+          <table id="table-tab1">
             <thead>
               <tr><th>NIK</th><th>Nama</th><th>Dept</th><th>Jabatan</th><th>Blok</th><th>Kamar</th><th>Lokasi</th></tr>
             </thead>
@@ -236,20 +225,18 @@ tbody tr:hover { background: var(--hover); }
         <div class="col-6 col-md-4"><input id="cariBlock" class="form-control" placeholder="Blok"></div>
         <div class="col-6 col-md-4"><input id="cariKamar" class="form-control" placeholder="No. Kamar"></div>
       </div>
-      
       <div class="text-center mb-3">
           <button class="btn-elegant" onclick="cariBlockKamar()">
               <i class="bi bi-funnel"></i> Tampilkan Data
           </button>
       </div>
-      
       <div class="d-flex justify-content-between align-items-center mb-2">
         <span class="text-muted small fw-medium">Hasil Filter</span>
-        <button class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" onclick="screenshotTabel('tab2')"><i class="bi bi-download me-1"></i> Screenshot</button>
+        <button class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" onclick="screenshotTabel('tab2')"><i class="bi bi-camera me-1"></i> Screenshot</button>
       </div>
       <div id="screenshot-area-tab2">
         <div class="table-container">
-          <table>
+          <table id="table-tab2">
             <thead>
               <tr><th>NIK</th><th>Nama</th><th>Dept</th><th>Jabatan</th><th>Blok</th><th>Kamar</th><th>Lokasi</th></tr>
             </thead>
@@ -264,7 +251,6 @@ tbody tr:hover { background: var(--hover); }
 </div>
 
 <script>
-/* SEMUA LOGIKA JAVASCRIPT TETAP SAMA SEPERTI ASLINYA */
 window.addEventListener('load', ()=>{
   setTimeout(()=>{
     const splash = document.getElementById('splash-screen');
@@ -315,42 +301,50 @@ async function cariBlockKamar(){
   const loc = document.getElementById("cariLokasi").value;
   const blk = document.getElementById("cariBlock").value.trim();
   const kmr = document.getElementById("cariKamar").value.trim();
-
-  if(!loc || !blk || !kmr) {
-    alert("⚠️ Mohon isi semua filter.");
-    return;
-  }
-
+  if(!loc || !blk || !kmr) { alert("⚠️ Mohon isi semua filter."); return; }
   let query = supabaseClient.from("Karyawan").select("*");
   query = query.ilike("lokasi_hunian", `%${loc}%`);
   query = query.ilike("block", `%${blk}%`);
   query = query.eq("no_kamar", kmr);
-
   const {data} = await query;
   render(document.getElementById("hasilBlock"), data);
 }
 
+/* FUNGSI SCREENSHOT PERBAIKAN UNTUK HP */
 function screenshotTabel(tab){
-  const area = document.getElementById("screenshot-area-"+tab);
-  const tableContainer = area.querySelector(".table-container");
-  const originalMaxHeight = tableContainer.style.maxHeight;
+  const container = document.querySelector(`#screenshot-area-${tab} .table-container`);
+  const table = document.getElementById(`table-${tab}`);
+  
+  // Simpan gaya asli
+  const originalWidth = container.style.width;
+  const originalOverflow = container.style.overflow;
+  const originalMaxHeight = container.style.maxHeight;
 
-  tableContainer.style.maxHeight = "none";
+  // PAKSA MELEBAR PENUH SEBELUM FOTO
+  container.style.width = table.scrollWidth + "px";
+  container.style.overflow = "visible";
+  container.style.maxHeight = "none";
+
   setTimeout(()=>{
-    html2canvas(area, {
-        scale: 2, 
-        useCORS: true, 
+    html2canvas(container, {
+        scale: 2,
+        useCORS: true,
         backgroundColor: document.body.classList.contains('dark') ? '#1e1e1e' : '#ffffff',
-        scrollX: 0,
-        scrollY: -window.scrollY
+        width: table.scrollWidth,
+        height: container.scrollHeight,
+        windowWidth: table.scrollWidth // Kunci agar HP tidak memotong gambar
     }).then(canvas=>{
       const link = document.createElement("a");
-      link.download = `MessKPS_${Date.now()}.png`;
-      link.href = canvas.toDataURL();
+      link.download = `Data_Mess_${Date.now()}.png`;
+      link.href = canvas.toDataURL("image/png");
       link.click();
-      tableContainer.style.maxHeight = originalMaxHeight;
+      
+      // Kembalikan gaya asli setelah foto selesai
+      container.style.width = originalWidth;
+      container.style.overflow = originalOverflow;
+      container.style.maxHeight = originalMaxHeight;
     });
-  },200);
+  }, 300);
 }
 </script>
 
