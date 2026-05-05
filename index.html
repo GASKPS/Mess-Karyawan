@@ -300,14 +300,38 @@ document.getElementById("cariNik").addEventListener("input", async (e)=>{
 async function cariBlockKamar(){
   const loc = document.getElementById("cariLokasi").value;
   const blk = document.getElementById("cariBlock").value.trim();
-  const kmr = document.getElementById("cariKamar").value.trim();
-  if(!loc || !blk || !kmr) { alert("⚠️ Mohon isi semua filter."); return; }
+  const kmrInput = document.getElementById("cariKamar").value;
+
+  // 🔥 Bersihkan input kamar (hindari spasi & karakter aneh)
+  const kmr = kmrInput.trim();
+
+  if(!loc || !blk || !kmr) { 
+    alert("⚠️ Mohon isi semua filter."); 
+    return; 
+  }
+
   let query = supabaseClient.from("Karyawan").select("*");
+
+  // tetap fleksibel
   query = query.ilike("lokasi_hunian", `%${loc}%`);
   query = query.ilike("block", `%${blk}%`);
-  query = query.eq("no_kamar", kmr);
-  const {data} = await query;
-  render(document.getElementById("hasilBlock"), data);
+
+  // 🔥 pakai filter eq (lebih strict dari eq biasa)
+  query = query.filter("no_kamar", "eq", kmr);
+
+  const { data, error } = await query;
+
+  if(error){
+    console.error("Error:", error);
+    return;
+  }
+
+  // 🔥 FILTER TAMBAHAN DI FRONTEND (ANTI HASIL NYASAR)
+  const hasilFix = (data || []).filter(r => 
+    String(r.no_kamar).trim() === kmr
+  );
+
+  render(document.getElementById("hasilBlock"), hasilFix);
 }
 
 /* FUNGSI SCREENSHOT PERBAIKAN UNTUK HP */
