@@ -1,375 +1,353 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Mess Karyawan - PT KPS</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mess Karyawan - PT KPS</title>
 
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-<style>
-/* ================== MINI SPLASH SCREEN ================== */
-#splash-screen{
-  position:fixed;
-  inset:0;
-  background: var(--bg);
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  z-index:9999;
-  flex-direction:column;
-  pointer-events:none;
-  transition: opacity 0.5s ease;
-}
-#splash-screen img{
-  height:80px;
-  object-fit:contain;
-  margin-bottom:10px;
-}
-#splash-screen span{
-  font-size:14px;
-  color: var(--text-muted);
-}
+    <style>
+        /* ================== VARIABLES & GENERAL ================== */
+        :root {
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --primary: #1e3a8a;
+            --border: #e2e8f0;
+            --hover: rgba(30,58,138,.05);
+            --badge-primary: #1e40af;
+            --badge-secondary: #64748b;
+            --input-bg: #ffffff;
+        }
 
-/* ================== VARIABLES & GENERAL ================== */
-:root{
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --text: #1e293b;
-  --text-muted: #64748b;
-  --primary: #1e3a8a;
-  --border: #e2e8f0;
-  --hover: rgba(30,58,138,.05);
-  --badge-primary: #1e40af;
-  --badge-secondary: #64748b;
-  --input-bg: #ffffff;
-}
+        body.dark {
+            --bg: #121212;
+            --card: #1e1e1e;
+            --text: #e2e8f0;
+            --text-muted: #94a3b8;
+            --primary: #60a5fa;
+            --border: #2d2d2d;
+            --hover: rgba(96,165,250,0.08);
+            --badge-primary: #3b82f6;
+            --badge-secondary: #475569;
+            --input-bg: #252525;
+        }
 
-body.dark{
-  --bg: #121212;
-  --card: #1e1e1e;
-  --text: #e2e8f0;
-  --text-muted: #94a3b8;
-  --primary: #60a5fa;
-  --border: #2d2d2d;
-  --hover: rgba(96,165,250,0.08);
-  --badge-primary: #3b82f6;
-  --badge-secondary: #475569;
-  --input-bg: #252525;
-}
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            min-height: 100vh; 
+            padding: 15px 10px;
+            display: flex; 
+            justify-content: center; 
+            align-items: flex-start; 
+            font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif; 
+            transition: background 0.3s, color 0.3s;
+        }
 
-body { 
-  background: var(--bg); 
-  color: var(--text); 
-  min-height:100vh; 
-  padding: 15px 10px;
-  display:flex; 
-  justify-content:center; 
-  align-items:flex-start; 
-  font-family:"Plus Jakarta Sans", "Segoe UI",sans-serif; 
-  transition: background 0.3s, color 0.3s;
-}
+        /* ================== SPLASH SCREEN ================== */
+        #splash-screen {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            flex-direction: column;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        #splash-screen img { height: 80px; object-fit: contain; margin-bottom: 10px; }
+        #splash-screen span { font-size: 14px; color: var(--text-muted); }
 
-.card { 
-  max-width:950px; 
-  width:100%; 
-  background:var(--card); 
-  border-radius:24px; 
-  padding: 20px;
-  box-shadow:0 10px 40px rgba(0,0,0,.08); 
-  position:relative; 
-  border: 1px solid var(--border);
-  text-align:center; 
-}
+        /* ================== COMPONENTS ================== */
+        .card { 
+            max-width: 950px; 
+            width: 100%; 
+            background: var(--card); 
+            border-radius: 24px; 
+            padding: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.08); 
+            position: relative; 
+            border: 1px solid var(--border);
+            text-align: center; 
+        }
 
-@media (min-width: 768px) {
-    body { padding: 40px 15px; }
-    .card { padding: 35px; }
-}
+        @media (min-width: 768px) {
+            body { padding: 40px 15px; }
+            .card { padding: 35px; }
+        }
 
-h2 { color:var(--primary); margin-bottom:4px; font-weight: 800; letter-spacing: -0.5px; font-size: 1.5rem; }
-.subtitle { font-size:13px; color:var(--text-muted); margin-bottom:15px; }
+        h2 { color: var(--primary); margin-bottom: 4px; font-weight: 800; letter-spacing: -0.5px; font-size: 1.5rem; }
+        
+        .dark-toggle { position: absolute; top: 15px; right: 15px; }
+        .eclipse { position: relative; width: 22px; height: 22px; display: inline-block; }
+        .eclipse .sun { position: absolute; inset: 0; border-radius: 50%; background: #facc15; box-shadow: 0 0 6px rgba(250,204,21,.8); transition: transform 0.4s ease; }
+        .eclipse .moon { position: absolute; inset: 0; border-radius: 50%; background: #1e1e1e; transform: translateX(-26px); transition: transform 0.4s ease; }
+        body.dark .eclipse .moon { transform: translateX(0); box-shadow: 0 0 6px #60a5fa; }
 
-.dark-toggle { position: absolute; top: 15px; right: 15px; }
-.eclipse { position:relative; width:22px; height:22px; display:inline-block; }
-.eclipse .sun { position:absolute; inset:0; border-radius:50%; background:#facc15; box-shadow:0 0 6px rgba(250,204,21,.8); transition:transform 0.4s ease; }
-.eclipse .moon { position:absolute; inset:0; border-radius:50%; background:#1e1e1e; transform:translateX(-26px); transition:transform 0.4s ease; }
-body.dark .eclipse .moon { transform:translateX(0); box-shadow:0 0 6px #60a5fa; }
+        .form-control { border-radius: 12px; transition: all 0.2s ease; background-color: var(--input-bg); color: var(--text); border: 1px solid var(--border); padding: 10px 14px; font-size: 16px; }
+        .form-control:focus { background-color: var(--input-bg); color: var(--text); border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
 
-.form-control { border-radius:12px; transition: all 0.2s ease; background-color: var(--input-bg); color: var(--text); border: 1px solid var(--border); padding: 10px 14px; font-size: 16px; }
-.form-control:focus { background-color: var(--input-bg); color: var(--text); border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
+        .btn-elegant {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 15px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
+            width: 100%;
+        }
 
-.btn-elegant {
-    background: var(--primary);
-    color: white;
-    border: none;
-    border-radius: 12px;
-    padding: 12px 24px;
-    font-weight: 600;
-    font-size: 15px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    transition: all 0.3s ease;
-    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
-    width: 100%;
-}
+        @media (min-width: 768px) { .btn-elegant { width: auto; } }
 
-@media (min-width: 768px) {
-    .btn-elegant { width: auto; }
-}
+        .table-container { 
+            max-height: 400px; 
+            overflow: auto; 
+            border-radius: 16px; 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            margin-bottom: 10px;
+            -webkit-overflow-scrolling: touch;
+        }
 
-.table-container { 
-    max-height: 400px; 
-    overflow-x: auto; 
-    overflow-y: auto; 
-    border-radius: 16px; 
-    background: var(--card); 
-    border: 1px solid var(--border); 
-    margin-bottom: 10px;
-    -webkit-overflow-scrolling: touch;
-}
+        table { width: 100%; min-width: 700px; border-collapse: collapse; color: var(--text); }
+        th { position: sticky; top: 0; background: var(--primary); color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 8px; z-index: 10; }
+        body.dark th { color: #111; font-weight: 700; background: var(--primary); }
 
-table { width: 100%; min-width: 700px; border-collapse: collapse; color: var(--text); }
-th { position: sticky; top: 0; background: var(--primary); color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 8px; z-index: 10; border: none; }
-body.dark th { color: #111; font-weight: 700; background: var(--primary); }
+        td { padding: 12px 8px; font-size: 13px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        tbody tr:hover { background: var(--hover); }
 
-td { padding: 12px 8px; font-size: 13px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-tbody tr:hover { background: var(--hover); }
+        #logo-web { height: 60px; margin-bottom: 15px; object-fit: contain; }
+        .badge { padding: 5px 8px; border-radius: 6px; font-weight: 600; font-size: 11px; }
+        .badge.bg-primary { background-color: var(--badge-primary) !important; }
+        .badge.bg-secondary { background-color: var(--badge-secondary) !important; }
 
-#logo-web { height: 60px; margin-bottom: 15px; object-fit: contain; }
-@media (min-width: 768px) { #logo-web { height: 75px; } }
-
-.footer { font-size: 11px; color: var(--text-muted); margin-top: 25px; }
-
-.badge { padding: 5px 8px; border-radius: 6px; font-weight: 600; font-size: 11px; }
-.badge.bg-primary { background-color: var(--badge-primary) !important; }
-.badge.bg-secondary { background-color: var(--badge-secondary) !important; }
-
-.nav-pills .nav-link { 
-    color: var(--text-muted); 
-    font-weight: 600; 
-    border-radius: 12px; 
-    padding: 8px 12px; 
-    font-size: 13px;
-    transition: 0.3s; 
-}
-.nav-pills .nav-link.active { background-color: var(--primary); color: white; }
-</style>
+        .nav-pills .nav-link { 
+            color: var(--text-muted); 
+            font-weight: 600; 
+            border-radius: 12px; 
+            padding: 8px 12px; 
+            font-size: 13px;
+            transition: 0.3s; 
+        }
+        .nav-pills .nav-link.active { background-color: var(--primary); color: white; }
+    </style>
 </head>
 <body>
 
 <div id="splash-screen">
-  <img src="logo-perusahaan.png" alt="Logo">
-  <span>Memuat Portal...</span>
+    <img src="logo-perusahaan.png" alt="Logo">
+    <span>Memuat Portal...</span>
 </div>
 
 <div class="card">
-  <div class="dark-toggle">
-    <button class="btn btn-outline-secondary btn-sm rounded-pill border-0" onclick="toggleDark()">
-      <span class="eclipse"><span class="sun"></span><span class="moon"></span></span>
-    </button>
-  </div>
-
-  <img id="logo-web" src="logo-perusahaan.png" alt="Logo">
-
-  <h2>Mess Karyawan</h2>
-  
-  <div id="last-update" class="mb-3 small opacity-75"><i class="bi bi-clock-history"></i> Update Terakhir: 02 MEI 2026, 08:51 WIT</div>
-
-  <ul class="nav nav-pills justify-content-center mb-4 p-1 bg-light rounded-pill d-inline-flex mx-auto" style="background: rgba(0,0,0,0.03) !important;">
-    <li class="nav-item">
-      <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab1">Pencarian</button>
-    </li>
-    <li class="nav-item">
-      <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab2">Filter</button>
-    </li>
-  </ul>
-
-  <div class="tab-content">
-    <div class="tab-pane fade show active" id="tab1">
-      <div class="mb-3">
-        <input id="cariNik" class="form-control" placeholder="Cari NIK atau Nama...">
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="text-muted small fw-medium">Hasil</span>
-        <button class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" onclick="screenshotTabel('tab1')"><i class="bi bi-camera me-1"></i> Screenshot</button>
-      </div>
-      <div id="screenshot-area-tab1">
-        <div class="table-container">
-          <table id="table-tab1">
-            <thead>
-              <tr><th>NIK</th><th>Nama</th><th>Dept</th><th>Jabatan</th><th>Blok</th><th>Kamar</th><th>Lokasi</th></tr>
-            </thead>
-            <tbody id="hasilNik"><tr><td colspan="7" class="py-5 text-muted small">Mulai ketik untuk mencari...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
+    <div class="dark-toggle">
+        <button class="btn btn-outline-secondary btn-sm rounded-pill border-0" onclick="toggleDark()">
+            <span class="eclipse"><span class="sun"></span><span class="moon"></span></span>
+        </button>
     </div>
 
-    <div class="tab-pane fade" id="tab2">
-      <div class="row g-2 mb-3">
-        <div class="col-12 col-md-4">
-          <select id="cariLokasi" class="form-control">
-            <option value="">Pilih Lokasi</option>
-            <option value="SURYA RESIDENCE (P2)">SURYA RESIDENCE (P2)</option>
-            <option value="MENTARI">MENTARI</option>
-            <option value="PELANGI">PELANGI</option>
-          </select>
-        </div>
-        <div class="col-6 col-md-4"><input id="cariBlock" class="form-control" placeholder="Blok"></div>
-        <div class="col-6 col-md-4"><input id="cariKamar" class="form-control" placeholder="No. Kamar"></div>
-      </div>
-      <div class="text-center mb-3">
-          <button class="btn-elegant" onclick="cariBlockKamar()">
-              <i class="bi bi-funnel"></i> Tampilkan Data
-          </button>
-      </div>
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <span class="text-muted small fw-medium">Hasil Filter</span>
-        <button class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" onclick="screenshotTabel('tab2')"><i class="bi bi-camera me-1"></i> Screenshot</button>
-      </div>
-      <div id="screenshot-area-tab2">
-        <div class="table-container">
-          <table id="table-tab2">
-            <thead>
-              <tr><th>NIK</th><th>Nama</th><th>Dept</th><th>Jabatan</th><th>Blok</th><th>Kamar</th><th>Lokasi</th></tr>
-            </thead>
-            <tbody id="hasilBlock"><tr><td colspan="7" class="py-5 text-muted small">Lengkapi filter di atas...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
+    <img id="logo-web" src="logo-perusahaan.png" alt="Logo">
 
-  <div class="footer opacity-50">© 2026 PT Karunia Permai Sentosa</div>
+    <h2>Mess Karyawan</h2>
+    <div id="last-update" class="mb-3 small opacity-75"><i class="bi bi-clock-history"></i> Update Terakhir: 02 MEI 2026, 08:51 WIT</div>
+
+    <ul class="nav nav-pills justify-content-center mb-4 p-1 bg-light rounded-pill d-inline-flex mx-auto" style="background: rgba(0,0,0,0.03) !important;">
+        <li class="nav-item">
+            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab1">Pencarian</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab2">Filter Blok/Kamar</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="tab1">
+            <div class="mb-3">
+                <input id="cariNik" class="form-control" placeholder="Cari NIK atau Nama...">
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted small fw-medium">Hasil</span>
+                <button class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" onclick="screenshotTabel('tab1')"><i class="bi bi-camera me-1"></i> Screenshot</button>
+            </div>
+            <div id="screenshot-area-tab1">
+                <div class="table-container">
+                    <table id="table-tab1">
+                        <thead>
+                            <tr><th>NIK</th><th>Nama</th><th>Dept</th><th>Jabatan</th><th>Blok</th><th>Kamar</th><th>Lokasi</th></tr>
+                        </thead>
+                        <tbody id="hasilNik"><tr><td colspan="7" class="py-5 text-muted small">Mulai ketik untuk mencari...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="tab2">
+            <div class="row g-2 mb-3">
+                <div class="col-12 col-md-4">
+                    <select id="cariLokasi" class="form-control">
+                        <option value="">Pilih Lokasi</option>
+                        <option value="SURYA RESIDENCE (P2)">SURYA RESIDENCE (P2)</option>
+                        <option value="MENTARI">MENTARI</option>
+                        <option value="PELANGI">PELANGI</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-4"><input id="cariBlock" class="form-control" placeholder="Blok (Contoh: 8)"></div>
+                <div class="col-6 col-md-4"><input id="cariKamar" class="form-control" placeholder="No. Kamar (Contoh: 1)"></div>
+            </div>
+            <div class="text-center mb-3">
+                <button class="btn-elegant" onclick="cariBlockKamar()">
+                    <i class="bi bi-funnel"></i> Tampilkan Data
+                </button>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="text-muted small fw-medium">Hasil Filter</span>
+                <button class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" onclick="screenshotTabel('tab2')"><i class="bi bi-camera me-1"></i> Screenshot</button>
+            </div>
+            <div id="screenshot-area-tab2">
+                <div class="table-container">
+                    <table id="table-tab2">
+                        <thead>
+                            <tr><th>NIK</th><th>Nama</th><th>Dept</th><th>Jabatan</th><th>Blok</th><th>Kamar</th><th>Lokasi</th></tr>
+                        </thead>
+                        <tbody id="hasilBlock"><tr><td colspan="7" class="py-5 text-muted small">Lengkapi filter di atas...</td></tr></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer opacity-50 mt-4 small">© 2026 PT Karunia Permai Sentosa</div>
 </div>
 
 <script>
-window.addEventListener('load', ()=>{
-  setTimeout(()=>{
-    const splash = document.getElementById('splash-screen');
-    splash.style.opacity = '0';
-    setTimeout(()=> splash.style.display='none',500);
-  },800); 
-});
-
-function toggleDark(){ 
-  document.body.classList.toggle("dark"); 
-  localStorage.setItem("dark",document.body.classList.contains("dark")?"on":"off"); 
-}
-if(localStorage.getItem("dark")==="on") document.body.classList.add("dark");
-
-const supabaseClient = supabase.createClient(
-  "https://ufljifxnhipnsrqktrti.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbGppZnhuaGlwbnNycWt0cnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMzMzMzEsImV4cCI6MjA4NDYwOTMzMX0.ueLqkq2n-x3QUMyB59avZeVEs74GmRt8r3Sr8NNEB9A"
-);
-
-function render(tbody, data){
-  if(!data || !data.length){
-    tbody.innerHTML=`<tr><td colspan="7" class="py-5 text-muted">⚠️ Tidak ditemukan</td></tr>`;
-    return;
-  }
-  tbody.innerHTML=data.map(r=>`
-    <tr>
-      <td class="fw-bold small">${r.nik??"-"}</td>
-      <td class="text-start">${r.nama??"-"}</td>
-      <td class="small">${r.department??"-"}</td>
-      <td class="small">${r.jabatan??"-"}</td>
-      <td><span class="badge bg-primary">${r.block??"-"}</span></td>
-      <td><span class="badge bg-secondary">${r.no_kamar??"-"}</span></td>
-      <td class="small text-muted">${r.lokasi_hunian??"-"}</td>
-    </tr>`).join("");
-}
-
-document.getElementById("cariNik").addEventListener("input", async (e)=>{
-  const v = e.target.value.trim();
-  if(v.length < 2) return;
-  const {data} = await supabaseClient.from("Karyawan")
-    .select("*")
-    .or(`nik.ilike.%${v}%,nama.ilike.%${v}%`)
-    .limit(10);
-  render(document.getElementById("hasilNik"), data);
-});
-
-async function cariBlockKamar(){
-  const loc = document.getElementById("cariLokasi").value;
-  const blk = document.getElementById("cariBlock").value.trim();
-  const kmrInput = document.getElementById("cariKamar").value;
-
-  // 🔥 Bersihkan input kamar (hindari spasi & karakter aneh)
-  const kmr = kmrInput.trim();
-
-  if(!loc || !blk || !kmr) { 
-    alert("⚠️ Mohon isi semua filter."); 
-    return; 
-  }
-
-  let query = supabaseClient.from("Karyawan").select("*");
-
-  // tetap fleksibel
-  query = query.ilike("lokasi_hunian", `%${loc}%`);
-  query = query.ilike("block", `%${blk}%`);
-
-  // 🔥 pakai filter eq (lebih strict dari eq biasa)
-  query = query.filter("no_kamar", "eq", kmr);
-
-  const { data, error } = await query;
-
-  if(error){
-    console.error("Error:", error);
-    return;
-  }
-
-  // 🔥 FILTER TAMBAHAN DI FRONTEND (ANTI HASIL NYASAR)
-  const hasilFix = (data || []).filter(r => 
-    String(r.no_kamar).trim() === kmr
-  );
-
-  render(document.getElementById("hasilBlock"), hasilFix);
-}
-
-/* FUNGSI SCREENSHOT PERBAIKAN UNTUK HP */
-function screenshotTabel(tab){
-  const container = document.querySelector(`#screenshot-area-${tab} .table-container`);
-  const table = document.getElementById(`table-${tab}`);
-  
-  // Simpan gaya asli
-  const originalWidth = container.style.width;
-  const originalOverflow = container.style.overflow;
-  const originalMaxHeight = container.style.maxHeight;
-
-  // PAKSA MELEBAR PENUH SEBELUM FOTO
-  container.style.width = table.scrollWidth + "px";
-  container.style.overflow = "visible";
-  container.style.maxHeight = "none";
-
-  setTimeout(()=>{
-    html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: document.body.classList.contains('dark') ? '#1e1e1e' : '#ffffff',
-        width: table.scrollWidth,
-        height: container.scrollHeight,
-        windowWidth: table.scrollWidth // Kunci agar HP tidak memotong gambar
-    }).then(canvas=>{
-      const link = document.createElement("a");
-      link.download = `Data_Mess_${Date.now()}.png`;
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-      
-      // Kembalikan gaya asli setelah foto selesai
-      container.style.width = originalWidth;
-      container.style.overflow = originalOverflow;
-      container.style.maxHeight = originalMaxHeight;
+    // SPLASH SCREEN LOGIC
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0';
+            setTimeout(() => splash.style.display = 'none', 500);
+        }, 800);
     });
-  }, 300);
-}
+
+    // DARK MODE LOGIC
+    function toggleDark() {
+        document.body.classList.toggle("dark");
+        localStorage.setItem("dark", document.body.classList.contains("dark") ? "on" : "off");
+    }
+    if (localStorage.getItem("dark") === "on") document.body.classList.add("dark");
+
+    // SUPABASE CONFIG
+    const supabaseClient = supabase.createClient(
+        "https://ufljifxnhipnsrqktrti.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbGppZnhuaGlwbnNycWt0cnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMzMzMzEsImV4cCI6MjA4NDYwOTMzMX0.ueLqkq2n-x3QUMyB59avZeVEs74GmRt8r3Sr8NNEB9A"
+    );
+
+    // RENDER TABLE FUNCTION
+    function render(tbody, data) {
+        if (!data || !data.length) {
+            tbody.innerHTML = `<tr><td colspan="7" class="py-5 text-muted">⚠️ Tidak ditemukan hasil yang cocok</td></tr>`;
+            return;
+        }
+        tbody.innerHTML = data.map(r => `
+            <tr>
+                <td class="fw-bold small">${r.nik ?? "-"}</td>
+                <td class="text-start">${r.nama ?? "-"}</td>
+                <td class="small">${r.department ?? "-"}</td>
+                <td class="small">${r.jabatan ?? "-"}</td>
+                <td><span class="badge bg-primary">${r.block ?? "-"}</span></td>
+                <td><span class="badge bg-secondary">${r.no_kamar ?? "-"}</span></td>
+                <td class="small text-muted">${r.lokasi_hunian ?? "-"}</td>
+            </tr>`).join("");
+    }
+
+    // SEARCH BY NAME/NIK (Tab 1)
+    document.getElementById("cariNik").addEventListener("input", async (e) => {
+        const v = e.target.value.trim();
+        if (v.length < 2) return;
+        const { data } = await supabaseClient.from("Karyawan")
+            .select("*")
+            .or(`nik.ilike.%${v}%,nama.ilike.%${v}%`)
+            .limit(15);
+        render(document.getElementById("hasilNik"), data);
+    });
+
+    // FILTER BY BLOCK & KAMAR (Tab 2) - FIXED EXACT MATCH
+    async function cariBlockKamar() {
+        const loc = document.getElementById("cariLokasi").value;
+        const blk = document.getElementById("cariBlock").value.trim();
+        const kmr = document.getElementById("cariKamar").value.trim();
+
+        if (!loc || !blk || !kmr) {
+            alert("⚠️ Mohon lengkapi semua filter: Lokasi, Blok, dan Nomor Kamar.");
+            return;
+        }
+
+        // PERBAIKAN: Menggunakan .eq() agar hasil pencarian bersifat absolut (tidak mengandung/ilike)
+        const { data, error } = await supabaseClient
+            .from("Karyawan")
+            .select("*")
+            .eq("lokasi_hunian", loc)
+            .eq("block", blk)
+            .eq("no_kamar", kmr);
+
+        if (error) {
+            console.error("Error:", error);
+            alert("Terjadi kesalahan koneksi database.");
+            return;
+        }
+
+        render(document.getElementById("hasilBlock"), data);
+    }
+
+    // SCREENSHOT FUNCTION
+    function screenshotTabel(tab) {
+        const container = document.querySelector(`#screenshot-area-${tab} .table-container`);
+        const table = document.getElementById(`table-${tab}`);
+        
+        const originalWidth = container.style.width;
+        const originalOverflow = container.style.overflow;
+        const originalMaxHeight = container.style.maxHeight;
+
+        container.style.width = table.scrollWidth + "px";
+        container.style.overflow = "visible";
+        container.style.maxHeight = "none";
+
+        setTimeout(() => {
+            html2canvas(container, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: document.body.classList.contains('dark') ? '#1e1e1e' : '#ffffff',
+                width: table.scrollWidth,
+                height: container.scrollHeight,
+                windowWidth: table.scrollWidth
+            }).then(canvas => {
+                const link = document.createElement("a");
+                link.download = `Data_Mess_${tab}_${Date.now()}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+                
+                container.style.width = originalWidth;
+                container.style.overflow = originalOverflow;
+                container.style.maxHeight = originalMaxHeight;
+            });
+        }, 300);
+    }
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
