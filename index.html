@@ -2,15 +2,12 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mess Karyawan - PT KPS</title>
-
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
-
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-
     <style>
         /* ================== VARIABLES & GENERAL ================== */
         :root {
@@ -24,8 +21,10 @@
             --badge-primary: #1e40af;
             --badge-secondary: #64748b;
             --input-bg: #ffffff;
+            --danger-bg: #fef2f2;
+            --danger-text: #b91c1c;
+            --danger-border: #fecaca;
         }
-
         body.dark {
             --bg: #121212;
             --card: #1e1e1e;
@@ -37,20 +36,21 @@
             --badge-primary: #3b82f6;
             --badge-secondary: #475569;
             --input-bg: #252525;
+            --danger-bg: #2a1414;
+            --danger-text: #fca5a5;
+            --danger-border: #4c1d1d;
         }
-
-        body { 
-            background: var(--bg); 
-            color: var(--text); 
-            min-height: 100vh; 
+        body {
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
             padding: 15px 10px;
-            display: flex; 
-            justify-content: center; 
-            align-items: flex-start; 
-            font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif; 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            font-family: "Plus Jakarta Sans", "Segoe UI", sans-serif;
             transition: background 0.3s, color 0.3s;
         }
-
         /* ================== SPLASH SCREEN ================== */
         #splash-screen {
             position: fixed;
@@ -66,36 +66,33 @@
         }
         #splash-screen img { height: 80px; object-fit: contain; margin-bottom: 10px; }
         #splash-screen span { font-size: 14px; color: var(--text-muted); }
-
         /* ================== COMPONENTS ================== */
-        .card { 
-            max-width: 950px; 
-            width: 100%; 
-            background: var(--card); 
-            border-radius: 24px; 
+        .card {
+            max-width: 950px;
+            width: 100%;
+            background: var(--card);
+            border-radius: 24px;
             padding: 20px;
-            box-shadow: 0 10px 40px rgba(0,0,0,.08); 
-            position: relative; 
+            box-shadow: 0 10px 40px rgba(0,0,0,.08);
+            position: relative;
             border: 1px solid var(--border);
-            text-align: center; 
+            text-align: center;
         }
-
         @media (min-width: 768px) {
             body { padding: 40px 15px; }
             .card { padding: 35px; }
         }
-
         h2 { color: var(--primary); margin-bottom: 4px; font-weight: 800; letter-spacing: -0.5px; font-size: 1.5rem; }
-        
-        .dark-toggle { position: absolute; top: 15px; right: 15px; }
+
+        /* ================== TOP BAR (toggle + logout) ================== */
+        .top-actions { position: absolute; top: 15px; right: 15px; display: flex; gap: 6px; align-items: center; }
         .eclipse { position: relative; width: 22px; height: 22px; display: inline-block; }
         .eclipse .sun { position: absolute; inset: 0; border-radius: 50%; background: #facc15; box-shadow: 0 0 6px rgba(250,204,21,.8); transition: transform 0.4s ease; }
         .eclipse .moon { position: absolute; inset: 0; border-radius: 50%; background: #1e1e1e; transform: translateX(-26px); transition: transform 0.4s ease; }
         body.dark .eclipse .moon { transform: translateX(0); box-shadow: 0 0 6px #60a5fa; }
 
-        .form-control { border-radius: 12px; transition: all 0.2s ease; background-color: var(--input-bg); color: var(--text); border: 1px solid var(--border); padding: 10px 14px; font-size: 16px; }
+        .form-control { border-radius: 12px; transition: border-color 0.2s ease, box-shadow 0.2s ease; background-color: var(--input-bg); color: var(--text); border: 1px solid var(--border); padding: 10px 14px; font-size: 16px; }
         .form-control:focus { background-color: var(--input-bg); color: var(--text); border-color: var(--primary); box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1); }
-
         .btn-elegant {
             background: var(--primary);
             color: white;
@@ -108,65 +105,135 @@
             align-items: center;
             justify-content: center;
             gap: 8px;
-            transition: all 0.3s ease;
+            transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
             box-shadow: 0 4px 12px rgba(30, 58, 138, 0.15);
             width: 100%;
         }
-
+        .btn-elegant:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(30, 58, 138, 0.25); }
+        .btn-elegant:active { transform: translateY(0); }
+        .btn-elegant:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
         @media (min-width: 768px) { .btn-elegant { width: auto; } }
 
-        .table-container { 
-            max-height: 400px; 
-            overflow: auto; 
-            border-radius: 16px; 
-            background: var(--card); 
-            border: 1px solid var(--border); 
+        .table-container {
+            max-height: 400px;
+            overflow: auto;
+            border-radius: 16px;
+            background: var(--card);
+            border: 1px solid var(--border);
             margin-bottom: 10px;
             -webkit-overflow-scrolling: touch;
         }
-
         table { width: 100%; min-width: 700px; border-collapse: collapse; color: var(--text); }
         th { position: sticky; top: 0; background: var(--primary); color: #fff; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; padding: 12px 8px; z-index: 10; }
         body.dark th { color: #111; font-weight: 700; background: var(--primary); }
-
         td { padding: 12px 8px; font-size: 13px; border-bottom: 1px solid var(--border); white-space: nowrap; }
         tbody tr:hover { background: var(--hover); }
-
         #logo-web { height: 60px; margin-bottom: 15px; object-fit: contain; }
         .badge { padding: 5px 8px; border-radius: 6px; font-weight: 600; font-size: 11px; }
         .badge.bg-primary { background-color: var(--badge-primary) !important; }
         .badge.bg-secondary { background-color: var(--badge-secondary) !important; }
-
-        .nav-pills .nav-link { 
-            color: var(--text-muted); 
-            font-weight: 600; 
-            border-radius: 12px; 
-            padding: 8px 12px; 
+        .nav-pills .nav-link {
+            color: var(--text-muted);
+            font-weight: 600;
+            border-radius: 12px;
+            padding: 8px 12px;
             font-size: 13px;
-            transition: 0.3s; 
+            transition: 0.3s;
         }
         .nav-pills .nav-link.active { background-color: var(--primary); color: white; }
+
+        /* ================== LOGIN SCREEN ================== */
+        .login-card {
+            max-width: 420px;
+            width: 100%;
+            background: var(--card);
+            border-radius: 24px;
+            padding: 32px 24px;
+            box-shadow: 0 10px 40px rgba(0,0,0,.08);
+            position: relative;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+        @media (min-width: 768px) { .login-card { padding: 40px 36px; } }
+        .login-card .login-logo { height: 64px; object-fit: contain; margin-bottom: 16px; }
+        .login-card .login-sub { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; }
+        .login-field { position: relative; margin-bottom: 14px; text-align: left; }
+        .login-field label { font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; display: block; }
+        .pass-toggle {
+            position: absolute; right: 12px; top: 35px;
+            background: none; border: none; color: var(--text-muted);
+            cursor: pointer; padding: 4px; font-size: 16px;
+        }
+        .login-error {
+            display: none;
+            background: var(--danger-bg);
+            color: var(--danger-text);
+            border: 1px solid var(--danger-border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .login-note { margin-top: 18px; font-size: 11px; color: var(--text-muted); }
+
+        @media (prefers-reduced-motion: reduce) {
+            * { transition: none !important; animation: none !important; }
+        }
     </style>
 </head>
 <body>
-
+<!-- ================== SPLASH ================== -->
 <div id="splash-screen">
     <img src="logo-perusahaan.png" alt="Logo">
     <span>Memuat Portal...</span>
 </div>
 
-<div class="card">
-    <div class="dark-toggle">
-        <button class="btn btn-outline-secondary btn-sm rounded-pill border-0" onclick="toggleDark()">
+<!-- ================== LOGIN SCREEN ================== -->
+<div class="login-card" id="login-screen" style="display:none;">
+    <div class="top-actions">
+        <button class="btn btn-outline-secondary btn-sm rounded-pill border-0" onclick="toggleDark()" title="Mode gelap/terang">
             <span class="eclipse"><span class="sun"></span><span class="moon"></span></span>
         </button>
     </div>
-
-    <img id="logo-web" src="logo-perusahaan.png" alt="Logo">
-
+    <img class="login-logo" src="logo-perusahaan.png" alt="Logo">
     <h2>Mess Karyawan</h2>
-    <div id="last-update" class="mb-3 small opacity-75"><i class="bi bi-clock-history"></i> Update Terakhir: 24 Juni 2026, 14:58 WIT</div>
+    <p class="login-sub">Silakan masuk untuk melanjutkan</p>
 
+    <div class="login-error" id="login-error"></div>
+
+    <div class="login-field">
+        <label for="loginUser">Email atau NIK</label>
+        <input id="loginUser" class="form-control" autocomplete="username" placeholder="Masukkan email atau NIK">
+    </div>
+    <div class="login-field">
+        <label for="loginPass">Password</label>
+        <input id="loginPass" type="password" class="form-control" autocomplete="current-password" placeholder="Masukkan password">
+        <button type="button" class="pass-toggle" onclick="togglePass()" title="Lihat password">
+            <i class="bi bi-eye" id="passIcon"></i>
+        </button>
+    </div>
+
+    <button class="btn-elegant w-100 mt-2" id="loginBtn" onclick="doLogin()">
+        <i class="bi bi-box-arrow-in-right"></i> Masuk
+    </button>
+
+    <div class="login-note">Akses terbatas hanya untuk pengguna terdaftar.</div>
+</div>
+
+<!-- ================== MAIN APP ================== -->
+<div class="card" id="app-screen" style="display:none;">
+    <div class="top-actions">
+        <button class="btn btn-outline-secondary btn-sm rounded-pill border-0" onclick="toggleDark()" title="Mode gelap/terang">
+            <span class="eclipse"><span class="sun"></span><span class="moon"></span></span>
+        </button>
+        <button class="btn btn-outline-danger btn-sm rounded-pill" onclick="doLogout()" title="Keluar">
+            <i class="bi bi-box-arrow-right"></i>
+        </button>
+    </div>
+    <img id="logo-web" src="logo-perusahaan.png" alt="Logo">
+    <h2>Mess Karyawan</h2>
+    <div id="last-update" class="mb-3 small opacity-75"><i class="bi bi-clock-history"></i> Update Terakhir: 10 Juni 2026, 06:50 WIT</div>
     <ul class="nav nav-pills justify-content-center mb-4 p-1 bg-light rounded-pill d-inline-flex mx-auto" style="background: rgba(0,0,0,0.03) !important;">
         <li class="nav-item">
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab1">Pencarian</button>
@@ -175,14 +242,13 @@
             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab2">Filter Blok/Kamar</button>
         </li>
     </ul>
-
     <div class="tab-content">
         <div class="tab-pane fade show active" id="tab1">
             <div class="mb-3">
                 <input id="cariNik" class="form-control" placeholder="Cari NIK atau Nama...">
             </div>
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="text-muted small fw-medium">Hasil</span>
+                <span class="text-muted small fw-medium" id="count-tab1">Hasil</span>
                 <button class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" onclick="screenshotTabel('tab1')"><i class="bi bi-camera me-1"></i> Screenshot</button>
             </div>
             <div id="screenshot-area-tab1">
@@ -196,7 +262,6 @@
                 </div>
             </div>
         </div>
-
         <div class="tab-pane fade" id="tab2">
             <div class="row g-2 mb-3">
                 <div class="col-12 col-md-4">
@@ -216,7 +281,7 @@
                 </button>
             </div>
             <div class="d-flex justify-content-between align-items-center mb-2">
-                <span class="text-muted small fw-medium">Hasil Filter</span>
+                <span class="text-muted small fw-medium" id="count-tab2">Hasil Filter</span>
                 <button class="btn btn-link btn-sm text-decoration-none text-primary fw-bold" onclick="screenshotTabel('tab2')"><i class="bi bi-camera me-1"></i> Screenshot</button>
             </div>
             <div id="screenshot-area-tab2">
@@ -231,37 +296,147 @@
             </div>
         </div>
     </div>
-
     <div class="footer opacity-50 mt-4 small">© 2026 PT Karunia Permai Sentosa</div>
 </div>
 
 <script>
-    // SPLASH SCREEN LOGIC
-    window.addEventListener('load', () => {
-        setTimeout(() => {
-            const splash = document.getElementById('splash-screen');
-            splash.style.opacity = '0';
-            setTimeout(() => splash.style.display = 'none', 500);
-        }, 800);
-    });
+    /* ============================================================
+       KONFIGURASI
+       ============================================================ */
+    // Jika akun dibuat dengan pola NIK (mis. 12345@kps.local),
+    // user cukup mengetik NIK saja — domain ini ditambahkan otomatis.
+    // Jika akun pakai email asli, user mengetik email lengkap (ada "@").
+    const NIK_DOMAIN = "kps.local";
 
-    // DARK MODE LOGIC
+    // ====== SUPABASE ======
+    const supabaseClient = supabase.createClient(
+        "https://ufljifxnhipnsrqktrti.supabase.co",
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbGppZnhuaGlwbnNycWt0cnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMzMzMzEsImV4cCI6MjA4NDYwOTMzMX0.ueLqkq2n-x3QUMyB59avZeVEs74GmRt8r3Sr8NNEB9A"
+    );
+
+    /* ============================================================
+       DARK MODE
+       ============================================================ */
     function toggleDark() {
         document.body.classList.toggle("dark");
         localStorage.setItem("dark", document.body.classList.contains("dark") ? "on" : "off");
     }
     if (localStorage.getItem("dark") === "on") document.body.classList.add("dark");
 
-    // SUPABASE CONFIG
-    const supabaseClient = supabase.createClient(
-        "https://ufljifxnhipnsrqktrti.supabase.co",
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVmbGppZnhuaGlwbnNycWt0cnRpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjkwMzMzMzEsImV4cCI6MjA4NDYwOTMzMX0.ueLqkq2n-x3QUMyB59avZeVEs74GmRt8r3Sr8NNEB9A"
-    );
+    /* ============================================================
+       NAVIGASI LAYAR (login <-> app)
+       ============================================================ */
+    function showLogin() {
+        document.getElementById("login-screen").style.display = "block";
+        document.getElementById("app-screen").style.display = "none";
+    }
+    function showApp() {
+        document.getElementById("app-screen").style.display = "block";
+        document.getElementById("login-screen").style.display = "none";
+    }
 
-    // RENDER TABLE FUNCTION
-    function render(tbody, data) {
+    /* ============================================================
+       AUTH
+       ============================================================ */
+    function resolveEmail(input) {
+        input = input.trim();
+        if (!input) return "";
+        return input.includes("@") ? input : `${input}@${NIK_DOMAIN}`;
+    }
+
+    function showLoginError(msg) {
+        const box = document.getElementById("login-error");
+        box.textContent = msg;
+        box.style.display = "block";
+    }
+
+    function setLoginLoading(loading) {
+        const btn = document.getElementById("loginBtn");
+        btn.disabled = loading;
+        btn.innerHTML = loading
+            ? '<span class="spinner-border spinner-border-sm me-1"></span> Memproses...'
+            : '<i class="bi bi-box-arrow-in-right"></i> Masuk';
+    }
+
+    async function doLogin() {
+        const userInput = document.getElementById("loginUser").value.trim();
+        const pass = document.getElementById("loginPass").value;
+        document.getElementById("login-error").style.display = "none";
+
+        if (!userInput || !pass) {
+            showLoginError("Email/NIK dan password wajib diisi.");
+            return;
+        }
+
+        setLoginLoading(true);
+        const email = resolveEmail(userInput);
+        const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
+        setLoginLoading(false);
+
+        if (error) {
+            // Pesan diseragamkan demi keamanan (tidak membocorkan apakah email terdaftar).
+            showLoginError("Email/NIK atau password salah.");
+            return;
+        }
+
+        // Sukses
+        document.getElementById("loginPass").value = "";
+        document.getElementById("login-error").style.display = "none";
+        showApp();
+    }
+
+    async function doLogout() {
+        await supabaseClient.auth.signOut();
+        document.getElementById("loginUser").value = "";
+        document.getElementById("loginPass").value = "";
+        // Bersihkan hasil agar tidak tertinggal
+        document.getElementById("hasilNik").innerHTML = `<tr><td colspan="7" class="py-5 text-muted small">Mulai ketik untuk mencari...</td></tr>`;
+        document.getElementById("hasilBlock").innerHTML = `<tr><td colspan="7" class="py-5 text-muted small">Lengkapi filter di atas...</td></tr>`;
+        document.getElementById("cariNik").value = "";
+        showLogin();
+    }
+
+    // Cek sesi saat halaman dibuka
+    async function checkSession() {
+        const { data } = await supabaseClient.auth.getSession();
+        if (data.session) showApp();
+        else showLogin();
+    }
+
+    // Show/hide password
+    function togglePass() {
+        const inp = document.getElementById("loginPass");
+        const icon = document.getElementById("passIcon");
+        if (inp.type === "password") { inp.type = "text"; icon.className = "bi bi-eye-slash"; }
+        else { inp.type = "password"; icon.className = "bi bi-eye"; }
+    }
+
+    // Tekan Enter untuk login
+    ["loginUser", "loginPass"].forEach(id => {
+        document.getElementById(id).addEventListener("keydown", e => {
+            if (e.key === "Enter") doLogin();
+        });
+    });
+
+    /* ============================================================
+       SPLASH + INIT
+       ============================================================ */
+    window.addEventListener('load', () => {
+        setTimeout(async () => {
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0';
+            setTimeout(() => splash.style.display = 'none', 500);
+            await checkSession();
+        }, 800);
+    });
+
+    /* ============================================================
+       RENDER TABEL
+       ============================================================ */
+    function render(tbody, data, countEl) {
         if (!data || !data.length) {
             tbody.innerHTML = `<tr><td colspan="7" class="py-5 text-muted">⚠️ Tidak ditemukan hasil yang cocok</td></tr>`;
+            if (countEl) countEl.textContent = "0 hasil";
             return;
         }
         tbody.innerHTML = data.map(r => `
@@ -274,34 +449,57 @@
                 <td><span class="badge bg-secondary">${r.no_kamar ?? "-"}</span></td>
                 <td class="small text-muted">${r.lokasi_hunian ?? "-"}</td>
             </tr>`).join("");
+        if (countEl) countEl.textContent = `${data.length} hasil`;
     }
 
-    // SEARCH BY NAME/NIK (Tab 1)
-    document.getElementById("cariNik").addEventListener("input", async (e) => {
+    /* ============================================================
+       PENCARIAN NIK/NAMA (Tab 1) — dengan debounce + sanitasi
+       ============================================================ */
+    let searchTimer;
+    document.getElementById("cariNik").addEventListener("input", (e) => {
         const v = e.target.value.trim();
-        if (v.length < 2) return;
-        const { data } = await supabaseClient.from("Karyawan")
-            .select("*")
-            .or(`nik.ilike.%${v}%,nama.ilike.%${v}%`)
-            .limit(15);
-        render(document.getElementById("hasilNik"), data);
+        clearTimeout(searchTimer);
+
+        if (v.length < 2) {
+            document.getElementById("hasilNik").innerHTML =
+                `<tr><td colspan="7" class="py-5 text-muted small">Mulai ketik untuk mencari...</td></tr>`;
+            document.getElementById("count-tab1").textContent = "Hasil";
+            return;
+        }
+
+        searchTimer = setTimeout(async () => {
+            // Hapus karakter yang bisa merusak sintaks filter PostgREST
+            const safe = v.replace(/[,()%*]/g, " ").trim();
+            if (!safe) return;
+
+            const { data, error } = await supabaseClient.from("Karyawan")
+                .select("nik,nama,department,jabatan,block,no_kamar,lokasi_hunian")
+                .or(`nik.ilike.%${safe}%,nama.ilike.%${safe}%`)
+                .limit(15);
+
+            if (error) {
+                document.getElementById("hasilNik").innerHTML =
+                    `<tr><td colspan="7" class="py-4 text-muted small">Gagal memuat data. Periksa koneksi lalu coba lagi.</td></tr>`;
+                return;
+            }
+            render(document.getElementById("hasilNik"), data, document.getElementById("count-tab1"));
+        }, 300);
     });
 
-    // FILTER BY BLOCK & KAMAR (Tab 2) - FIXED EXACT MATCH
+    /* ============================================================
+       FILTER BLOK & KAMAR (Tab 2) — exact match
+       ============================================================ */
     async function cariBlockKamar() {
         const loc = document.getElementById("cariLokasi").value;
         const blk = document.getElementById("cariBlock").value.trim();
         const kmr = document.getElementById("cariKamar").value.trim();
-
         if (!loc || !blk || !kmr) {
             alert("⚠️ Mohon lengkapi semua filter: Lokasi, Blok, dan Nomor Kamar.");
             return;
         }
-
-        // PERBAIKAN: Menggunakan .eq() agar hasil pencarian bersifat absolut (tidak mengandung/ilike)
         const { data, error } = await supabaseClient
             .from("Karyawan")
-            .select("*")
+            .select("nik,nama,department,jabatan,block,no_kamar,lokasi_hunian")
             .eq("lokasi_hunian", loc)
             .eq("block", blk)
             .eq("no_kamar", kmr);
@@ -311,23 +509,22 @@
             alert("Terjadi kesalahan koneksi database.");
             return;
         }
-
-        render(document.getElementById("hasilBlock"), data);
+        render(document.getElementById("hasilBlock"), data, document.getElementById("count-tab2"));
     }
 
-    // SCREENSHOT FUNCTION
+    /* ============================================================
+       SCREENSHOT
+       ============================================================ */
     function screenshotTabel(tab) {
         const container = document.querySelector(`#screenshot-area-${tab} .table-container`);
         const table = document.getElementById(`table-${tab}`);
-        
+
         const originalWidth = container.style.width;
         const originalOverflow = container.style.overflow;
         const originalMaxHeight = container.style.maxHeight;
-
         container.style.width = table.scrollWidth + "px";
         container.style.overflow = "visible";
         container.style.maxHeight = "none";
-
         setTimeout(() => {
             html2canvas(container, {
                 scale: 2,
@@ -341,7 +538,7 @@
                 link.download = `Data_Mess_${tab}_${Date.now()}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
-                
+
                 container.style.width = originalWidth;
                 container.style.overflow = originalOverflow;
                 container.style.maxHeight = originalMaxHeight;
@@ -349,7 +546,6 @@
         }, 300);
     }
 </script>
-
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
