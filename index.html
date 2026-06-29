@@ -453,7 +453,10 @@
     }
 
     /* ============================================================
-       PENCARIAN NIK/NAMA (Tab 1) — dengan debounce + sanitasi
+       PENCARIAN NIK/NAMA (Tab 1) — FUZZY via RPC (pg_trgm)
+       Tahan typo (Muhammad~Muhamad) & ejaan lama (Boedi->Budi).
+       Normalisasi & pencarian dilakukan di sisi database lewat
+       fungsi cari_karyawan(term). Lihat setup_fuzzy.sql.
        ============================================================ */
     let searchTimer;
     document.getElementById("cariNik").addEventListener("input", (e) => {
@@ -468,16 +471,12 @@
         }
 
         searchTimer = setTimeout(async () => {
-            // Hapus karakter yang bisa merusak sintaks filter PostgREST
-            const safe = v.replace(/[,()%*]/g, " ").trim();
-            if (!safe) return;
-
-            const { data, error } = await supabaseClient.from("Karyawan")
-                .select("nik,nama,department,jabatan,block,no_kamar,lokasi_hunian")
-                .or(`nik.ilike.%${safe}%,nama.ilike.%${safe}%`)
-                .limit(15);
+            // Term dikirim sebagai PARAMETER RPC, bukan disambung ke string filter,
+            // jadi aman dari injeksi sintaks — tak perlu sanitasi manual.
+            const { data, error } = await supabaseClient.rpc("cari_karyawan", { term: v });
 
             if (error) {
+                console.error("RPC cari_karyawan:", error);
                 document.getElementById("hasilNik").innerHTML =
                     `<tr><td colspan="7" class="py-4 text-muted small">Gagal memuat data. Periksa koneksi lalu coba lagi.</td></tr>`;
                 return;
@@ -487,7 +486,7 @@
     });
 
     /* ============================================================
-       FILTER BLOK & KAMAR (Tab 2) — exact match
+       FILTER BLOK & KAMAR (Tab 2) — exact match (tidak diubah)
        ============================================================ */
     async function cariBlockKamar() {
         const loc = document.getElementById("cariLokasi").value;
