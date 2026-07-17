@@ -687,9 +687,12 @@
        FILTER BLOK & KAMAR (Tab 2)
        ============================================================ */
     async function cariBlockKamar() {
-        const loc = document.getElementById("cariLokasi").value;
-        const blk = document.getElementById("cariBlock").value.trim();
-        const kmr = document.getElementById("cariKamar").value.trim();
+        // Normalisasi: buang spasi ujung + kompres spasi ganda, sama seperti saat upload,
+        // supaya perbandingan antara input dan data di database konsisten.
+        const norm = v => v.trim().replace(/\s+/g, " ");
+        const loc = norm(document.getElementById("cariLokasi").value);
+        const blk = norm(document.getElementById("cariBlock").value);
+        const kmr = norm(document.getElementById("cariKamar").value);
         showFilterError("");
         if (!loc || !blk || !kmr) {
             showFilterError("Mohon lengkapi semua filter: Lokasi, Blok, dan Nomor Kamar.");
@@ -699,12 +702,14 @@
         const originalHtml = btn.innerHTML;
         btn.disabled = true;
         btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Memuat...';
+        // ilike tanpa wildcard % = pencocokan persis tapi tidak peduli huruf besar/kecil,
+        // jadi "Surya Residence (P2)" tetap ketemu meski data tersimpan beda kapitalisasi.
         const { data, error } = await supabaseClient
             .from("Karyawan")
             .select("nik,nama,department,jabatan,block,no_kamar,lokasi_hunian")
-            .eq("lokasi_hunian", loc)
-            .eq("block", blk)
-            .eq("no_kamar", kmr);
+            .ilike("lokasi_hunian", loc)
+            .ilike("block", blk)
+            .ilike("no_kamar", kmr);
         btn.disabled = false;
         btn.innerHTML = originalHtml;
         if (error) {
@@ -854,15 +859,22 @@
         updateConfirmState();
     }
     // Bangun daftar baris final dari file + pemetaan kolom saat ini
+    // Rapikan spasi: buang spasi di ujung DAN kompres spasi ganda di tengah jadi satu.
+    // Excel sering menyisipkan spasi tak sengaja saat copy-paste antar sel.
+    function cleanText(v) {
+        return String(v ?? "").trim().replace(/\s+/g, " ");
+    }
     function buildRows() {
         return parsedRows.map(r => ({
+            // NIK, Nama, Dept, Jabatan: trim biasa saja (spasi ujung dibuang, isi tidak diutak-atik)
             nik: String(r[currentMapping.nik] ?? "").trim(),
             nama: String(r[currentMapping.nama] ?? "").trim(),
             department: String(r[currentMapping.department] ?? "").trim(),
             jabatan: String(r[currentMapping.jabatan] ?? "").trim(),
-            block: String(r[currentMapping.block] ?? "").trim(),
-            no_kamar: String(r[currentMapping.no_kamar] ?? "").trim(),
-            lokasi_hunian: String(r[currentMapping.lokasi_hunian] ?? "").trim()
+            // Blok, Kamar, Lokasi: dirapikan lebih ketat karena dipakai untuk exact-match di tab Filter
+            block: cleanText(r[currentMapping.block]),
+            no_kamar: cleanText(r[currentMapping.no_kamar]),
+            lokasi_hunian: cleanText(r[currentMapping.lokasi_hunian])
         })).filter(r => r.nik);
     }
     // Cari NIK yang muncul lebih dari sekali — penyebab paling umum error
