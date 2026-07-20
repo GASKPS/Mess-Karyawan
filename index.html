@@ -355,6 +355,7 @@
     <div class="eyebrow">Portal Internal · HKOC</div>
     <h2>Mess Karyawan</h2>
     <div class="update-chip"><i class="bi bi-clock-history"></i> Update Terakhir: <span id="last-update-text">14 Juli 2026, 17:00 WIT</span></div>
+    <div class="update-chip" id="accessBanner" style="display:none;"><i class="bi bi-shield-lock"></i> <span id="accessBannerText"></span></div>
     <ul class="nav segmented">
         <li class="nav-item" style="display:contents;">
             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab1"><i class="bi bi-search"></i> Pencarian</button>
@@ -363,7 +364,10 @@
             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab2"><i class="bi bi-grid-3x3-gap"></i> Filter</button>
         </li>
         <li class="nav-item" style="display:contents;">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab3"><i class="bi bi-cloud-upload"></i> Update Data</button>
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab3" id="navBtnTab3" style="display:none;"><i class="bi bi-cloud-upload"></i> Update Data</button>
+        </li>
+        <li class="nav-item" style="display:contents;">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab4" id="navBtnTab4" style="display:none;"><i class="bi bi-shield-lock"></i> Kelola Akses</button>
         </li>
     </ul>
     <div class="tab-content">
@@ -373,7 +377,7 @@
                 <input id="cariNik" class="form-control" placeholder="Cari NIK atau Nama...">
                 <button type="button" class="search-clear" id="clearCariNik" onclick="clearSearch()" aria-label="Bersihkan pencarian">&times;</button>
             </div>
-            <div class="hint-text mb-2 text-start">Bisa ketik nama sebagian atau NIK.</div>
+            <div class="hint-text mb-2 text-start">Bisa ketik nama sebagian atau NIK. Typo kecil tetap terdeteksi.</div>
             <div class="d-flex justify-content-between align-items-center mb-2">
                 <span class="text-muted small fw-medium" id="count-tab1">Hasil</span>
                 <button class="btn-ghost" id="ssBtnTab1" onclick="screenshotTabel('tab1')"><i class="bi bi-camera"></i> Screenshot</button>
@@ -474,6 +478,44 @@
                 </div>
             </div>
         </div>
+        <!-- ============ TAB 4: KELOLA AKSES (admin only) ============ -->
+        <div class="tab-pane fade" id="tab4">
+            <div class="hint-text mb-3 text-start">Beri akses lihat kamar tertentu ke user terbatas. Otomatis kadaluarsa dalam 24 jam, atau bisa dicabut lebih awal kapan saja.</div>
+            <div class="mb-2 text-start">
+                <select id="aksesUser" class="form-control">
+                    <option value="">Pilih user terbatas...</option>
+                </select>
+            </div>
+            <div class="row g-2 mb-2">
+                <div class="col-12 col-md-4">
+                    <select id="aksesLokasi" class="form-control">
+                        <option value="">Pilih Lokasi</option>
+                        <option value="SURYA RESIDENCE (P2)">SURYA RESIDENCE (P2)</option>
+                        <option value="MENTARI">MENTARI</option>
+                        <option value="PELANGI">PELANGI</option>
+                    </select>
+                </div>
+                <div class="col-6 col-md-4"><input id="aksesBlok" class="form-control" placeholder="Blok"></div>
+                <div class="col-6 col-md-4"><input id="aksesKamar" class="form-control" placeholder="No. Kamar"></div>
+            </div>
+            <div class="text-center mb-3">
+                <button class="btn-ghost" onclick="tambahKeDaftarAkses()"><i class="bi bi-plus-circle"></i> Tambah ke daftar</button>
+            </div>
+            <div id="daftarAksesChips" class="mb-3 text-start"><span class="hint-text">Belum ada kamar dipilih.</span></div>
+            <div class="inline-error" id="akses-error"></div>
+            <div class="text-center mb-4">
+                <button class="btn-elegant" id="berikanAksesBtn" onclick="berikanAkses()">
+                    <i class="bi bi-unlock"></i> Berikan Akses (berlaku 24 jam)
+                </button>
+            </div>
+            <div class="text-start fw-bold small mb-2">Akses aktif saat ini</div>
+            <div class="table-container">
+                <table class="card-table">
+                    <thead><tr><th>User</th><th>Lokasi</th><th>Blok</th><th>Kamar</th><th>Kadaluarsa</th><th>Aksi</th></tr></thead>
+                    <tbody id="daftarAksesAktif"><tr class="state-row"><td colspan="6" class="py-4 text-muted small state-cell">Memuat...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
     </div>
     <div class="footer opacity-50 mt-4">© 2026 HKOC (HJF · KPS · OST · CKM)</div>
 </div>
@@ -501,10 +543,51 @@
         document.getElementById("login-screen").style.display = "block";
         document.getElementById("app-screen").style.display = "none";
     }
-    function showApp() {
+    async function showApp() {
         document.getElementById("app-screen").style.display = "block";
         document.getElementById("login-screen").style.display = "none";
         updateLastUpdateText();
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        currentUserId = user ? user.id : null;
+        currentRole = user ? await fetchRole(user.id) : "terbatas";
+        applyRoleUI();
+        if (currentRole === "admin") {
+            loadAksesUsers();
+        } else if (currentUserId) {
+            showAccessBanner(currentUserId);
+        }
+    }
+    let currentRole = "terbatas";
+    let currentUserId = null;
+    // Ambil peran (admin / terbatas) dari tabel profiles. Default paling aman: terbatas.
+    async function fetchRole(userId) {
+        const { data, error } = await supabaseClient.from("profiles").select("role").eq("id", userId).maybeSingle();
+        if (error || !data) return "terbatas";
+        return data.role;
+    }
+    function applyRoleUI() {
+        const isAdmin = currentRole === "admin";
+        document.getElementById("navBtnTab3").style.display = isAdmin ? "" : "none";
+        document.getElementById("navBtnTab4").style.display = isAdmin ? "" : "none";
+        document.getElementById("accessBanner").style.display = isAdmin ? "none" : "";
+    }
+    // Info untuk user terbatas: berapa kamar yang bisa dilihat & kapan kadaluarsa terdekat
+    async function showAccessBanner(userId) {
+        const nowIso = new Date().toISOString();
+        const { data, error } = await supabaseClient
+            .from("akses_kamar_terbatas")
+            .select("expires_at")
+            .eq("user_id", userId)
+            .is("revoked_at", null)
+            .gt("expires_at", nowIso)
+            .order("expires_at", { ascending: true });
+        const text = document.getElementById("accessBannerText");
+        if (error || !data || !data.length) {
+            text.textContent = "Belum ada akses kamar yang diberikan admin.";
+            return;
+        }
+        const soonest = new Date(data[0].expires_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+        text.textContent = `Anda punya akses ke ${data.length} kamar, berlaku sampai ${soonest} WIT.`;
     }
     /* ============================================================
        AUTH
@@ -570,6 +653,12 @@
         document.getElementById("cariNik").value = "";
         document.getElementById("clearCariNik").style.display = "none";
         resetUploadState(true);
+        stagingRooms = [];
+        document.getElementById("navBtnTab3").style.display = "none";
+        document.getElementById("navBtnTab4").style.display = "none";
+        document.getElementById("accessBanner").style.display = "none";
+        currentRole = "terbatas";
+        currentUserId = null;
         setCurrentUserBadge(null);
         showLogin();
     }
@@ -1008,6 +1097,119 @@
             resetBtn.disabled = false;
             updateConfirmState();
         }
+    }
+    /* ============================================================
+       KELOLA AKSES (Tab 4, admin only)
+       Beri/cabut akses lihat kamar tertentu untuk user terbatas.
+       Kadaluarsa otomatis 24 jam (default kolom expires_at di DB).
+       ============================================================ */
+    let stagingRooms = [];
+    async function loadAksesUsers() {
+        const { data, error } = await supabaseClient.from("profiles").select("id, display_name").eq("role", "terbatas").order("display_name");
+        const sel = document.getElementById("aksesUser");
+        if (error || !data) {
+            sel.innerHTML = '<option value="">Gagal memuat daftar user</option>';
+        } else {
+            sel.innerHTML = '<option value="">Pilih user terbatas...</option>' +
+                data.map(u => `<option value="${u.id}">${escapeHtml(u.display_name || u.id)}</option>`).join("");
+        }
+        loadDaftarAksesAktif();
+    }
+    function tambahKeDaftarAkses() {
+        const lokasi = document.getElementById("aksesLokasi").value;
+        const blok = document.getElementById("aksesBlok").value.trim().replace(/\s+/g, " ");
+        const kamar = document.getElementById("aksesKamar").value.trim().replace(/\s+/g, " ");
+        const errEl = document.getElementById("akses-error");
+        errEl.style.display = "none";
+        if (!lokasi || !blok || !kamar) {
+            errEl.textContent = "Lengkapi Lokasi, Blok, dan Kamar dulu.";
+            errEl.style.display = "block";
+            return;
+        }
+        const sudahAda = stagingRooms.some(r => r.lokasi === lokasi && r.blok === blok && r.kamar === kamar);
+        if (!sudahAda) stagingRooms.push({ lokasi, blok, kamar });
+        renderStagingChips();
+        document.getElementById("aksesBlok").value = "";
+        document.getElementById("aksesKamar").value = "";
+    }
+    function renderStagingChips() {
+        const wrap = document.getElementById("daftarAksesChips");
+        if (!stagingRooms.length) { wrap.innerHTML = '<span class="hint-text">Belum ada kamar dipilih.</span>'; return; }
+        wrap.innerHTML = stagingRooms.map((r, i) => `
+            <span class="tag-key tag-block" style="margin:2px 6px 2px 0;">${escapeHtml(r.lokasi)} · Blok ${escapeHtml(r.blok)} · Kamar ${escapeHtml(r.kamar)}
+                <button type="button" onclick="hapusStaging(${i})" aria-label="Hapus dari daftar" style="background:none;border:none;color:inherit;margin-left:6px;cursor:pointer;font-weight:700;">&times;</button>
+            </span>`).join("");
+    }
+    function hapusStaging(i) { stagingRooms.splice(i, 1); renderStagingChips(); }
+    function showAksesError(msg) {
+        const el = document.getElementById("akses-error");
+        el.textContent = msg; el.style.display = "block";
+    }
+    async function berikanAkses() {
+        const userId = document.getElementById("aksesUser").value;
+        document.getElementById("akses-error").style.display = "none";
+        if (!userId) { showAksesError("Pilih user dulu."); return; }
+        if (!stagingRooms.length) { showAksesError("Tambahkan minimal satu kamar dulu."); return; }
+        const rows = stagingRooms.map(r => ({
+            user_id: userId,
+            lokasi_hunian: r.lokasi,
+            block: r.blok,
+            no_kamar: r.kamar,
+            granted_by: currentUserId
+        }));
+        const btn = document.getElementById("berikanAksesBtn");
+        const original = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Memproses...';
+        const { error } = await supabaseClient.from("akses_kamar_terbatas").insert(rows);
+        btn.disabled = false; btn.innerHTML = original;
+        if (error) { showAksesError("Gagal memberi akses: " + error.message); return; }
+        stagingRooms = [];
+        renderStagingChips();
+        document.getElementById("aksesUser").value = "";
+        loadDaftarAksesAktif();
+    }
+    async function loadDaftarAksesAktif() {
+        const tbody = document.getElementById("daftarAksesAktif");
+        tbody.innerHTML = '<tr class="state-row"><td colspan="6" class="py-4 text-muted small state-cell">Memuat...</td></tr>';
+        const nowIso = new Date().toISOString();
+        const { data, error } = await supabaseClient
+            .from("akses_kamar_terbatas")
+            .select("id, user_id, lokasi_hunian, block, no_kamar, expires_at")
+            .is("revoked_at", null)
+            .gt("expires_at", nowIso)
+            .order("expires_at", { ascending: true });
+        if (error) {
+            tbody.innerHTML = `<tr class="state-row"><td colspan="6" class="py-4 text-muted small state-cell">Gagal memuat: ${escapeHtml(error.message)}</td></tr>`;
+            return;
+        }
+        if (!data.length) {
+            tbody.innerHTML = '<tr class="state-row"><td colspan="6" class="py-4 text-muted small state-cell">Belum ada akses aktif.</td></tr>';
+            return;
+        }
+        // Ambil nama user secara terpisah (hindari ketergantungan pada nama constraint FK otomatis)
+        const userIds = [...new Set(data.map(g => g.user_id))];
+        const { data: profs } = await supabaseClient.from("profiles").select("id, display_name").in("id", userIds);
+        const nameMap = {};
+        (profs || []).forEach(p => { nameMap[p.id] = p.display_name; });
+        tbody.innerHTML = data.map(g => {
+            const exp = new Date(g.expires_at).toLocaleString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+            const nama = nameMap[g.user_id] || g.user_id;
+            return `<tr>
+                <td data-label="User" class="small">${escapeHtml(nama)}</td>
+                <td data-label="Lokasi" class="small text-muted">${escapeHtml(g.lokasi_hunian)}</td>
+                <td data-label="Blok"><span class="tag-key tag-block">${escapeHtml(g.block)}</span></td>
+                <td data-label="Kamar"><span class="tag-key tag-room">${escapeHtml(g.no_kamar)}</span></td>
+                <td data-label="Kadaluarsa" class="small">${exp} WIT</td>
+                <td data-label="Aksi"><button class="btn-ghost" onclick="cabutAkses('${g.id}')"><i class="bi bi-x-circle"></i> Cabut</button></td>
+            </tr>`;
+        }).join("");
+    }
+    async function cabutAkses(id) {
+        if (!confirm("Cabut akses ini sekarang?")) return;
+        const { error } = await supabaseClient.from("akses_kamar_terbatas").update({ revoked_at: new Date().toISOString() }).eq("id", id);
+        if (error) { alert("Gagal mencabut akses: " + error.message); return; }
+        loadDaftarAksesAktif();
     }
 </script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
