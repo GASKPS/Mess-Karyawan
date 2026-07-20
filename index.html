@@ -118,6 +118,7 @@
         }
         /* ================== TOP BAR ================== */
         .top-actions { position: absolute; top: 16px; right: 16px; display: flex; gap: 6px; align-items: center; z-index: 5; }
+        .top-actions-left { position: absolute; top: 16px; left: 16px; display: flex; gap: 6px; align-items: center; z-index: 5; }
         .icon-btn {
             width: 34px; height: 34px; border-radius: 10px;
             display: inline-flex; align-items: center; justify-content: center;
@@ -211,6 +212,7 @@
             display: flex; align-items: center; justify-content: center; gap: 5px;
             transition: background .2s, color .2s; border: none; background: transparent; white-space: nowrap;
         }
+        .icon-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
         .segmented .nav-link.active { background: var(--primary); color: #fff; }
         /* ================== LOGIN SCREEN ================== */
         .login-sub { color: var(--text-muted); font-size: 13.5px; margin-bottom: 22px; font-family: var(--font-body); }
@@ -342,6 +344,11 @@
 </div>
 <!-- ================== MAIN APP ================== -->
 <div class="card" id="app-screen" style="display:none;">
+    <div class="top-actions-left">
+        <button class="icon-btn" id="btnKelolaAkses" onclick="openKelolaAkses()" title="Kelola Akses" aria-label="Kelola akses kamar" style="display:none;">
+            <i class="bi bi-shield-lock"></i>
+        </button>
+    </div>
     <div class="top-actions">
         <span class="current-user-badge" id="current-user"><i class="bi bi-person-circle"></i> <span id="current-user-text"></span></span>
         <button class="icon-btn" onclick="toggleDark()" title="Mode gelap/terang" aria-label="Ganti mode gelap/terang">
@@ -358,16 +365,13 @@
     <div class="update-chip" id="accessBanner" style="display:none;"><i class="bi bi-shield-lock"></i> <span id="accessBannerText"></span></div>
     <ul class="nav segmented">
         <li class="nav-item" style="display:contents;">
-            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab1"><i class="bi bi-search"></i> Pencarian</button>
+            <button class="nav-link active" id="navBtnTab1" onclick="switchTab('tab1')"><i class="bi bi-search"></i> Pencarian</button>
         </li>
         <li class="nav-item" style="display:contents;">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab2"><i class="bi bi-grid-3x3-gap"></i> Filter</button>
+            <button class="nav-link" id="navBtnTab2" onclick="switchTab('tab2')"><i class="bi bi-grid-3x3-gap"></i> Filter</button>
         </li>
         <li class="nav-item" style="display:contents;">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab3" id="navBtnTab3" style="display:none;"><i class="bi bi-cloud-upload"></i> Update Data</button>
-        </li>
-        <li class="nav-item" style="display:contents;">
-            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab4" id="navBtnTab4" style="display:none;"><i class="bi bi-shield-lock"></i> Kelola Akses</button>
+            <button class="nav-link" id="navBtnTab3" onclick="switchTab('tab3')" style="display:none;"><i class="bi bi-cloud-upload"></i> Update Data</button>
         </li>
     </ul>
     <div class="tab-content">
@@ -568,9 +572,25 @@
     function applyRoleUI() {
         const isAdmin = currentRole === "admin";
         document.getElementById("navBtnTab3").style.display = isAdmin ? "" : "none";
-        document.getElementById("navBtnTab4").style.display = isAdmin ? "" : "none";
+        document.getElementById("btnKelolaAkses").style.display = isAdmin ? "" : "none";
         document.getElementById("accessBanner").style.display = isAdmin ? "none" : "";
     }
+    // Satu fungsi untuk semua perpindahan tab (Pencarian/Filter/Update Data/Kelola Akses).
+    // Tidak lagi bergantung ke Bootstrap Tab plugin supaya selalu cuma satu panel yang tampil.
+    function switchTab(tabId) {
+        document.querySelectorAll(".tab-pane").forEach(p => p.classList.remove("show", "active"));
+        document.getElementById(tabId).classList.add("show", "active");
+        document.querySelectorAll(".segmented .nav-link").forEach(b => b.classList.remove("active"));
+        document.getElementById("btnKelolaAkses").classList.remove("active");
+        if (tabId === "tab4") {
+            document.getElementById("btnKelolaAkses").classList.add("active");
+        } else {
+            const map = { tab1: "navBtnTab1", tab2: "navBtnTab2", tab3: "navBtnTab3" };
+            const btn = document.getElementById(map[tabId]);
+            if (btn) btn.classList.add("active");
+        }
+    }
+    function openKelolaAkses() { switchTab("tab4"); }
     // Info untuk user terbatas: berapa kamar yang bisa dilihat & kapan kadaluarsa terdekat
     async function showAccessBanner(userId) {
         const nowIso = new Date().toISOString();
@@ -655,7 +675,8 @@
         resetUploadState(true);
         stagingRooms = [];
         document.getElementById("navBtnTab3").style.display = "none";
-        document.getElementById("navBtnTab4").style.display = "none";
+        document.getElementById("btnKelolaAkses").style.display = "none";
+        document.getElementById("btnKelolaAkses").classList.remove("active");
         document.getElementById("accessBanner").style.display = "none";
         currentRole = "terbatas";
         currentUserId = null;
