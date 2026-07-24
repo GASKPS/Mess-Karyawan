@@ -286,6 +286,18 @@
         .status-text.success { color: var(--success-text); display: block; font-weight: 600; }
         .status-text.error { color: var(--danger-text); display: block; font-weight: 600; }
         .form-check-input { cursor: pointer; }
+        .app-toast {
+            position: fixed; bottom: 22px; left: 50%; z-index: 9999;
+            background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+            padding: 12px 20px; box-shadow: 0 12px 32px rgba(0,0,0,.18);
+            font-family: var(--font-body); font-size: 13.5px; font-weight: 700;
+            display: flex; align-items: center; gap: 8px; max-width: 90vw;
+            opacity: 0; pointer-events: none; transform: translate(-50%, 12px);
+            transition: opacity .25s ease, transform .25s ease;
+        }
+        .app-toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+        .app-toast.success { color: var(--success-text); }
+        .app-toast.error { color: var(--danger-text); }
         @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
         /* ================== MOBILE CARD TABLE (<480px) ================== */
         @media (max-width: 480px) {
@@ -715,17 +727,19 @@
         }, 800);
     });
     /* ============================================================
-       "UPDATE TERAKHIR" otomatis (fallback ke teks statis bila gagal)
+       "UPDATE TERAKHIR" — diambil dari tabel app_settings (diisi
+       otomatis setiap kali Update Data berhasil), fallback ke teks
+       statis kalau tabel belum di-setup / gagal diakses.
        ============================================================ */
     async function updateLastUpdateText() {
         try {
             const { data, error } = await supabaseClient
-                .from("Karyawan")
-                .select("updated_at")
-                .order("updated_at", { ascending: false })
-                .limit(1);
-            if (error || !data || !data.length || !data[0].updated_at) return;
-            const d = new Date(data[0].updated_at);
+                .from("app_settings")
+                .select("last_data_update")
+                .eq("id", 1)
+                .maybeSingle();
+            if (error || !data || !data.last_data_update) return;
+            const d = new Date(data.last_data_update);
             const formatted = d.toLocaleString("id-ID", {
                 day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit"
             });
@@ -733,6 +747,24 @@
         } catch (e) {
             console.warn("Tidak bisa memuat waktu update otomatis:", e);
         }
+    }
+    /* ============================================================
+       NOTIFIKASI TOAST — muncul sebentar di bawah layar, dipakai
+       untuk konfirmasi sukses/gagal aksi penting.
+       ============================================================ */
+    function showToast(msg, type) {
+        let toast = document.getElementById("appToast");
+        if (!toast) {
+            toast = document.createElement("div");
+            toast.id = "appToast";
+            document.body.appendChild(toast);
+        }
+        toast.className = "app-toast " + (type || "success");
+        const icon = type === "error" ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill";
+        toast.innerHTML = `<i class="bi ${icon}"></i> ${msg}`;
+        requestAnimationFrame(() => toast.classList.add("show"));
+        clearTimeout(toast._hideTimer);
+        toast._hideTimer = setTimeout(() => toast.classList.remove("show"), 4000);
     }
     /* ============================================================
        RENDER TABEL (Pencarian & Filter)
@@ -1107,12 +1139,16 @@
                 uploaded += chunk.length;
                 setUploadStatus(`Mengunggah data baru... (${uploaded}/${rows.length})`, "info");
             }
+            const nowIso = new Date().toISOString();
+            await supabaseClient.from("app_settings").update({ last_data_update: nowIso }).eq("id", 1);
             setUploadStatus(`Berhasil! ${uploaded} data karyawan diperbarui.`, "success");
-            document.getElementById("last-update-text").textContent = "Baru saja diperbarui";
+            showToast(`${uploaded} data karyawan berhasil diperbarui!`, "success");
+            updateLastUpdateText();
             resetUploadState(true);
         } catch (e) {
             console.error(e);
             setUploadStatus(e.message, "error");
+            showToast("Update data gagal — cek pesan error di atas.", "error");
         } finally {
             btn.innerHTML = originalHtml;
             resetBtn.disabled = false;
