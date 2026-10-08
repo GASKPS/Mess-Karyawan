@@ -2,24 +2,24 @@
   'use strict';
   const $=id=>document.getElementById(id),A=window.Akses;
   const e=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const icons={search:'<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>',filter:'<path d="M3 5h18M6 12h12M10 19h4"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',camera:'<path d="M3 7h4l2-3h6l2 3h4v14H3z"/><circle cx="12" cy="13" r="4"/>'};
+  const icons={user:'<circle cx="12" cy="8" r="3"/><path d="M5 21v-3a7 7 0 0 1 14 0v3"/>',building:'<path d="M4 21V7h8v14M8 7V3h9v18M2 21h20M7 11h2m-2 4h2m-2 3h2M14 7h1m-1 4h1m-1 4h1M17 11h3v10"/>',block:'<path d="M4 20h16M7 20V4l8-1v17M15 6h3v14M10 7v1m0 3v1m0 3v1"/>',key:'<circle cx="15" cy="8" r="5"/><path d="m11 12-8 8v2h4v-3h3v-3l3-3M16 7h.01"/>',chevron:'<path d="m6 9 6 6 6-6"/>',refresh:'<path d="M20 7v5h-5M4 17v-5h5M5 7a8 8 0 0 1 13-2l2 3M4 16l2 3a8 8 0 0 0 13-2"/>',search:'<circle cx="10" cy="10" r="7"/><path d="m15 15 6 6"/>',filter:'<path d="M3 4h18l-7 8v8l-4-2v-6z"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/>',camera:'<path d="M3 7h4l2-3h6l2 3h4v14H3z"/><circle cx="12" cy="13" r="4"/>'};
   document.querySelectorAll('[data-icon]').forEach(el=>{el.innerHTML='<svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+icons[el.dataset.icon]+'</svg>';});
   let view='search',requestNumber=0,busy=false,logPage=0,logs=[],logMore=false,logRequest=0,accountId=A.profile?.id||null;
   const state={search:null,filter:null},store=window.MessStore.create(A);
   let accountKey=store.identity();
   const time=v=>v?new Intl.DateTimeFormat('id-ID',{timeZone:'Asia/Jayapura',day:'numeric',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(v))+' WIT':'Belum ada pembaruan';
   function error(text){$('lookup-error').textContent=text;$('lookup-error').hidden=!text;}
-  function empty(title,description){return '<div class="empty-state"><strong>'+e(title)+'</strong><p>'+e(description)+'</p></div>';}
+  function empty(title,description){return '<div class="empty-state"><span class="empty-icon" aria-hidden="true"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">'+icons.search+'</svg></span><strong>'+e(title)+'</strong><p>'+e(description)+'</p></div>';}
   const columns=[['nik','NIK'],['nama','Nama'],['departemen','Departemen'],['jabatan','Jabatan'],['lokasi_hunian','Hunian'],['blok','Blok'],['nomor_kamar','Kamar'],['tanggal_masuk_hunian','Tanggal Masuk Hunian']];
   function table(rows){return '<div class="data-table-scroll"><table class="data-table"><thead><tr>'+columns.map(([,label])=>'<th scope="col">'+label+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+columns.map(([key,label])=>'<td data-label="'+label+'">'+(key==='nama'?'<strong>'+e(r[key]||'—')+'</strong>':e(r[key]||'—'))+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';}
   function render(){
     if(view==='log')return;const result=state[view];
-    $('lookup-result-title').textContent=view==='search'?'Hasil pencarian':'Data kamar';
+    $('lookup-result-title').textContent=view==='search'?'Hasil pencarian':'Penghuni kamar';
     $('lookup-screenshot').disabled=busy||!result?.data?.length;
     $('lookup-refresh').disabled=busy||!result;
     $('lookup-match-note').hidden=!result||result.mode_pencarian!=='mirip';
     $('lookup-results').setAttribute('aria-busy',String(busy));
-    if(!result){$('lookup-results').innerHTML=empty(view==='search'?'Mulai pencarian':'Pilih filter kamar',view==='search'?'Ketik nama atau NIK, lalu tekan Cari data.':'Isi lokasi, blok, atau kamar lalu tampilkan data.');$('lookup-result-caption').textContent='Belum ada pencarian';$('lookup-pagination').hidden=true;$('lookup-page').textContent='';return;}
+    if(!result){$('lookup-results').innerHTML=empty(view==='search'?'Mulai pencarian':'Filter belum dijalankan',view==='search'?'Ketik nama atau NIK, lalu tekan Cari data.':'Isi lokasi, blok, atau kamar lalu tampilkan data.');$('lookup-result-caption').textContent='Belum ada pencarian';$('lookup-pagination').hidden=true;$('lookup-page').textContent='';return;}
     const query=result.args;
     const label=view==='search'?query.p_kata:[query.p_lokasi,query.p_blok&&'Blok '+query.p_blok,query.p_kamar&&'Kamar '+query.p_kamar].filter(Boolean).join(' · ');
     $('lookup-result-caption').textContent=result.jumlah.toLocaleString('id-ID')+' data · '+label;

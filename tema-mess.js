@@ -12,7 +12,7 @@
       button.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (dark ? sun : moon) + '</svg>';
     });
     const meta = document.querySelector('meta[name="theme-color"]');
-    if (meta) meta.content = root.dataset.theme === 'dark' ? '#181e25' : '#f4f6f8';
+    if (meta) meta.content = root.dataset.theme === 'dark' ? '#181e25' : '#f2f4f8';
   }
   let initial = 'light';
   try { initial = localStorage.getItem(key) || 'light'; } catch {}
